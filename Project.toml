@@ -1,0 +1,14 @@
+name = "NoiseContrastiveEstimation"
+uuid = "c645be2d-9ae9-4390-aad7-de39f5a623c5"
+authors = ["Francesco Alemanno <francescoalemanno710@gmail.com>"]
+version = "1.0.0"
+
+[deps]
+
+[compat]
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
