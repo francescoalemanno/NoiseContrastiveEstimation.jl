@@ -1,12 +1,12 @@
 ```@meta
-CurrentModule = KissABC
+CurrentModule = NoiseContrastiveEstimation
 ```
 
-# KissABC
+# NoiseContrastiveEstimation
 
 ```@index
 ```
 
 ```@autodocs
-Modules = [KissABC]
+Modules = [NoiseContrastiveEstimation]
 ```
