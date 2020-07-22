@@ -13,10 +13,10 @@ makedocs(;
         canonical = "https://francescoalemanno.github.io/NoiseContrastiveEstimation.jl",
         assets = String[],
     ),
-    pages = [
-        "Basic Usage" => "index.md",
-        "Reference" => "reference.md",
-    ],
+    pages = ["Basic Usage" => "index.md", "Reference" => "reference.md"],
 )
 
-deploydocs(; repo = "github.com/francescoalemanno/NoiseContrastiveEstimation.jl", push_preview = true)
+deploydocs(;
+    repo = "github.com/francescoalemanno/NoiseContrastiveEstimation.jl",
+    push_preview = true,
+)
