@@ -9,10 +9,14 @@ using Test
     @test J(Cost(), (15, -10)) < J(Cost(), (5, -5)) < J(Cost(), (0, 0))
     x = zeros(2)
     v = zeros(2)
+    μ=0.9
+    η=10.0
+    i=0
     while true
-        v = 0.9 .* v .- J(Grad(), x)
-        x = x .+ v
-        sum(abs2, v) < 1e-8 && break
+        v = μ.* v .- J(Grad(), x.+η.*μ.*v)
+        x = x .+ η.*v
+        i=i+1
+        sum(abs2, v) < 1e-10 && break
     end
     @test J(Cost(), x) < J(Cost(), (15, -10))
     Jgless = CNCE(lϕ, data, noised)
