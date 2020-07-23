@@ -15,4 +15,7 @@ using Test
         sum(abs2, v) < 1e-8 && break
     end
     @test J(Cost(), x) < J(Cost(), (15, -10))
+    Jgless = CNCE(lϕ, data, noised)
+    @test_throws ErrorException("Gradient is not available") Jgless.gϕ(1,2)
+    @test J(Cost(), x) == Jgless(Cost(), x)
 end
