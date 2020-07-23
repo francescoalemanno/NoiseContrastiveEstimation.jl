@@ -21,7 +21,7 @@ function (J::CNCE)(::Cost, θ)
             G = bϕ - J.lϕ(J.noised[j, i], θ)
             2 / (κ * N) * log(1 + exp(-G))
         end for j = 1:κ)
-    end for i = 2:N)
+    end for i = 1:N)
 end
 
 function (J::CNCE)(::Grad, θ)
