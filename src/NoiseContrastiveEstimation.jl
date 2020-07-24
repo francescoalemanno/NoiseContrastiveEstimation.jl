@@ -7,7 +7,8 @@ struct CNCE{T,F,dF}
     noised::Matrix{T}
 end
 
-CNCE(lϕ, data, noised) = CNCE(lϕ, (x,y) -> error("Gradient is not available"), data, noised)
+CNCE(lϕ, data, noised) =
+    CNCE(lϕ, (x, y) -> error("Gradient is not available"), data, noised)
 
 struct Grad end
 struct Cost end
@@ -42,5 +43,23 @@ function (J::CNCE)(::Grad, θ)
     )
 end
 
-export CNCE, Grad, Cost
+function nesterov(J::CNCE, x0, μ, η; atol = 0, rtol = 1e-7)
+    x = identity.(x0)
+    i = 0
+    v = -J(Grad(), x)
+    C = J(Cost(), x)
+    C0 = C
+    while true
+        v = μ * v - J(Grad(), x + η * μ * v)
+        x = x + η * v
+        i = i + 1
+        n = J(Cost(), x) - C
+        C += n
+        (abs(n / C) <= rtol || abs(n) <= atol) && break
+    end
+    (sol = x, cost = C, cost_fractional_reduction = 1 - C / C0, fneval = i + 1, gneval = i)
+end
+
+
+export CNCE, Grad, Cost, nesterov
 end
