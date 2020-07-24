@@ -7,8 +7,9 @@ struct CNCE{T,F,dF}
     noised::Matrix{T}
 end
 
-CNCE(lϕ, data, noised) =
+function CNCE(lϕ, data, noised)
     CNCE(lϕ, (x, y) -> error("Gradient is not available"), data, noised)
+end
 
 struct Grad end
 struct Cost end
