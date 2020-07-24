@@ -35,9 +35,8 @@ end
     gϕ(σ,ξ)=ReverseDiff.gradient(x->lϕ(σ,x),ξ)
     =#
     data = [sign.(randn(10)) for i = 1:2]
-    noised = [sign.(randn(10) .+ 1.3) .* data[i] for j = 1:70, i in eachindex(data)]
+    noised = [sign.(randn(10) .+ 1.0) .* data[i] for j = 1:150, i in eachindex(data)]
     J = CNCE(lϕ, gϕ, data, noised)
-    ξ = sign.(randn(4, 10))
     x = sign.(randn(4, 10)) .* 0.01
     results = nesterov(J, x, 0.95, 0.05)
     @show results
