@@ -8,7 +8,7 @@ using Test
     J = CNCE(lϕ, gϕ, data, noised)
     @test J(Cost(), (15, -10)) < J(Cost(), (7.5, -5)) < J(Cost(), (0, 0))
     results = nesterov(J, zeros(2), 0.9, 7.0)
-    #@show results
+    @show results
     x = results.sol
     @test J(Cost(), x) < J(Cost(), (15, -10))
     Jgless = CNCE(lϕ, data, noised)
@@ -40,7 +40,7 @@ end
     ξ = sign.(randn(4, 10))
     x = sign.(randn(4, 10)) .* 0.01
     results = nesterov(J, x, 0.95, 0.05)
-    #@show results
+    @show results
     dx = sign.(results.sol)
     M = [maximum(abs.(dx * data[1] / length(data[1]))) for i = 1:length(data)]
     @test sum(M) == 2

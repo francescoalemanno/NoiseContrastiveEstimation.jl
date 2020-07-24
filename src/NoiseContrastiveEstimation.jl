@@ -50,8 +50,8 @@ function nesterov(J::CNCE, x0, μ, η; atol = 0, rtol = 1e-7)
     C = J(Cost(), x)
     C0 = C
     while true
-        v = μ * v - J(Grad(), x + η * μ * v)
-        x = x + η * v
+        v = μ * v - η * J(Grad(), x + μ * v)
+        x = x + v
         i = i + 1
         n = J(Cost(), x) - C
         C += n
