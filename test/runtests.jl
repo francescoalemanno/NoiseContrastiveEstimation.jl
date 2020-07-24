@@ -42,6 +42,6 @@ end
     results = nesterov(J, x, 0.95, 0.05)
     @show results
     dx = sign.(results.sol)
-    M = [maximum(abs.(dx * data[1] / length(data[1]))) for i = 1:length(data)]
+    M = [maximum(abs.(dx * data[i] / length(data[i]))) for i = 1:length(data)]
     @test sum(M) == 2
 end
