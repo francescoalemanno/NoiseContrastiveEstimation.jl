@@ -7,14 +7,14 @@ using Test, Random
     data = randn(R, 200) .* 0.3 .+ 1.5
     noised = foldl(hcat, x .+ randn(R, 20) .* 0.4 for x in data)
     J = CNCE(lϕ, gϕ, data, noised)
-    @test J(Cost(), (15, -10)) < J(Cost(), (7.5, -5)) < J(Cost(), (0, 0))
+    @test J((15, -10)).J < J((7.5, -5)).J < J((0, 0)).J
     results = nesterov(J, zeros(2), 0.9, 7.0)
     @show results
     x = results.sol
-    @test J(Cost(), x) < J(Cost(), (15, -10))
+    @test J(x).J < J((15, -10)).J
     Jgless = CNCE(lϕ, data, noised)
-    @test_throws ErrorException("Gradient is not available") Jgless.gϕ(1, 2)
-    @test J(Cost(), x) == Jgless(Cost(), x)
+    @test Jgless.gϕ(1, 2) == 0
+    @test J(x).J == Jgless(x).J
 end
 
 @testset "RBM training" begin
