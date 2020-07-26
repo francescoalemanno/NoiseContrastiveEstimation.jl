@@ -1,19 +1,20 @@
 using NoiseContrastiveEstimation
 using Test, Random
+
 @testset "Basic Functional" begin
     R = MersenneTwister(125)
     lϕ(x, θ) = θ[1] * x + θ[2] * x * x / 2
     gϕ(x, ϕ) = [x, x * x / 2]
     data = randn(R, 200) .* 0.3 .+ 1.5
     noised = foldl(hcat, x .+ randn(R, 20) .* 0.4 for x in data)
-    J = CNCE(lϕ, gϕ, data, noised)
+    J = CNCE(f=lϕ, grad_f=gϕ, data=data, noised=noised)
     @test J((15, -10)).J < J((7.5, -5)).J < J((0, 0)).J
     results = nesterov(J, zeros(2), 0.9, 7.0)
     @show results
     x = results.sol
     @test J(x).J < J((15, -10)).J
-    Jgless = CNCE(lϕ, data, noised)
-    @test Jgless.gϕ(1, 2) == 0
+    Jgless = CNCE(f=lϕ, data=data, noised=noised)
+    @test Jgless.grad_f(1, 2) == 0
     @test J(x).J == Jgless(x).J
 end
 
