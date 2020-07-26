@@ -39,8 +39,7 @@ function approxtol(a, b, rtol, atol)
 end
 
 function nesterov(J::CNCE, x0, μ, η; atol = 0, rtol = 1e-7, maxiter = 1e4)
-    J_dJ = J(x0)
-    C, v = J_dJ
+    C, v = J(x0)
     C0 = C
     i = 1
     x = x0 + zero(η)*v
