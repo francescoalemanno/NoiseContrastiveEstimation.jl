@@ -2,7 +2,7 @@ module NoiseContrastiveEstimation
 
 Base.@kwdef struct CNCE{T,F,dF}
     f::F
-    grad_f::dF=(x, y) -> 0
+    grad_f::dF = (x, y) -> 0
     data::Vector{T}
     noised::Matrix{T}
 end
@@ -42,7 +42,7 @@ function nesterov(J::CNCE, x0, μ, η; atol = 0, rtol = 1e-7, maxiter = 1e4)
     C, v = J(x0)
     C0 = C
     i = 1
-    x = x0 + zero(η)*v
+    x = x0 + zero(η) * v
     while i < maxiter
         f, gf = J(x - μ * v)
         v = μ * v + η * gf
