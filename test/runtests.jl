@@ -47,3 +47,18 @@ end
     M = [maximum(abs.(dx * data[i] / length(data[i]))) for i = 1:length(data)]
     @test sum(M) == 2
 end
+
+@testset "Estimate Covariate Model" begin
+    R = MersenneTwister(125)
+    gϕ(x, θ) = [x[1]*x[1], x[2]*x[2], x[1]*x[2], x[1], x[2]]
+    lϕ(x, θ) = θ'gϕ(x, θ)
+
+    data = [[x+1,y+1] for (x,y) in zip(randn(R,200),randn(R,200))]
+    noised = [x+0.3*randn(2) for j=1:50, x in data]
+    J = CNCE(f = lϕ, grad_f = gϕ, data = data, noised = noised)
+    results = nesterov(J, zeros(5), 0.9, 2.5)
+    @test results.sol[1]<0
+    @test results.sol[2]<0
+    @test results.sol[4]>0
+    @test results.sol[5]>0
+end
