@@ -1,5 +1,6 @@
 using NoiseContrastiveEstimation
 using Test, Random
+using ReverseDiff, LinearAlgebra
 
 @testset "Basic Functional" begin
     R = MersenneTwister(125)
@@ -59,35 +60,31 @@ end
     @test results.sol[5]>0
 end
 
-
-
-using ReverseDiff, LinearAlgebra
-
 @testset "DBM training" begin
     R = MersenneTwister(125)
+    
     function lϕ(σ, ξ)
-        L=length(σ)
-        t=L÷3
+        L = length(σ)
+        t = L ÷ 3
         sc1 = view(ξ, :, 1:t) * view(σ, 1:t)
         sc2 = view(ξ, :, (t+1):2t) * view(σ, (t+1):2t)
         sc3 = view(ξ, :, (2t+1):L) * view(σ, (2t+1):L)
-        dot(sc1+sc2,sc1+sc2)+dot(sc2+sc3,sc2+sc3)
+        dot(sc1 + sc2, sc1 + sc2) + dot(sc2 + sc3, sc2 + sc3)
     end
-    gϕ(σ,ξ) = ReverseDiff.gradient(x->lϕ(σ,x),ξ)
 
-    Nσ=20
-    Nμ=4
-    Ndata=2
-    Nnoise=20
-    p_flip=1/3
+    gϕ(σ, ξ) = ReverseDiff.gradient(x -> lϕ(σ, x), ξ)
+
+    Nσ = 20
+    Nμ = 4
+    Ndata = 2
+    Nnoise = 20
+    p_flip = 1 / 3
 
     data = [sign.(randn(R, Nσ)) for i = 1:Ndata]
     noised = [sign.(rand(R, Nσ) .- p_flip) .* data[i] for j = 1:Nnoise, i in eachindex(data)]
     J = CNCE(lϕ, gϕ, data, noised)
     x = sign.(randn(R, Nμ, Nσ)) .* 0.01
-
     results = nesterov(J, x, 0.9, 0.1)
-    @show results
     dx = sign.(results.sol)
     M = [maximum(abs.(dx * data[i] / length(data[i]))) for i = 1:length(data)]
     @test sum(M) == 2
