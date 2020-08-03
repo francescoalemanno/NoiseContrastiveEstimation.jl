@@ -10,7 +10,6 @@ using Test, Random
     J = CNCE(f = lϕ, grad_f = gϕ, data = data, noised = noised)
     @test J((15, -10)).J < J((7.5, -5)).J < J((0, 0)).J
     results = nesterov(J, zeros(2), 0.9, 7.0)
-    @show results
     x = results.sol
     @test J(x).J < J((15, -10)).J
     Jgless = CNCE(f = lϕ, data = data, noised = noised)
