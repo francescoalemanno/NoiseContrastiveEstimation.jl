@@ -89,3 +89,36 @@ end
     M = [maximum(abs.(dx * data[i] / length(data[i]))) for i = 1:length(data)]
     @test sum(M) == 2
 end
+
+struct DeepBM{Nl,T}
+    partitions::NTuple{Nl,T}
+end
+
+function (dbm::DeepBM{Nl,T})(σ,ξ) where {Nl,T}
+    sc = map(p -> view(ξ, :, p) * view(σ, p), dbm.partitions)
+    ll = map(length, dbm.partitions)
+    length(σ)*sum(x->dot(x,x), (sc[i] + sc[i+1]) / (ll[i] + ll[i+1]) for i in 1:(Nl-1))
+end
+
+@testset "DBM general training" begin
+    R = MersenneTwister(125)
+    
+    Nσ = 20
+    Nμ = 4
+    Ndata = 2
+    Nnoise = 20
+    p_flip = 1 / 3
+
+    lϕ=DeepBM((1:7,8:15,16:20))
+    gϕ(σ, ξ) = ReverseDiff.gradient(x -> lϕ(σ, x), ξ)
+
+    data = [sign.(randn(R, Nσ)) for i = 1:Ndata]
+    noised = [sign.(rand(R, Nσ) .- p_flip) .* data[i] for j = 1:Nnoise, i in eachindex(data)]
+    J = CNCE(lϕ, gϕ, data, noised)
+    x = sign.(randn(R, Nμ, Nσ)) .* 0.01
+    results = nesterov(J, x, 0.9, 0.5)
+
+    dx = sign.(results.sol)
+    M = [maximum(abs.(dx * data[i] / length(data[i]))) for i = 1:length(data)]
+    @test sum(M) == 2
+end
