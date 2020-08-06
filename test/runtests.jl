@@ -47,22 +47,22 @@ end
 
 @testset "Estimate Covariate Model" begin
     R = MersenneTwister(125)
-    gϕ(x, θ) = [x[1]*x[1], x[2]*x[2], x[1]*x[2], x[1], x[2]]
+    gϕ(x, θ) = [x[1] * x[1], x[2] * x[2], x[1] * x[2], x[1], x[2]]
     lϕ(x, θ) = θ'gϕ(x, θ)
 
-    data = [[x+1,y+1] for (x,y) in zip(randn(R,200),randn(R,200))]
-    noised = [x+0.3*randn(2) for j=1:50, x in data]
+    data = [[x + 1, y + 1] for (x, y) in zip(randn(R, 200), randn(R, 200))]
+    noised = [x + 0.3 * randn(2) for j = 1:50, x in data]
     J = CNCE(f = lϕ, grad_f = gϕ, data = data, noised = noised)
     results = nesterov(J, zeros(5), 0.9, 2.5)
-    @test results.sol[1]<0
-    @test results.sol[2]<0
-    @test results.sol[4]>0
-    @test results.sol[5]>0
+    @test results.sol[1] < 0
+    @test results.sol[2] < 0
+    @test results.sol[4] > 0
+    @test results.sol[5] > 0
 end
 
 @testset "DBM training" begin
     R = MersenneTwister(125)
-    
+
     function lϕ(σ, ξ)
         L = length(σ)
         t = L ÷ 3
@@ -81,7 +81,8 @@ end
     p_flip = 1 / 3
 
     data = [sign.(randn(R, Nσ)) for i = 1:Ndata]
-    noised = [sign.(rand(R, Nσ) .- p_flip) .* data[i] for j = 1:Nnoise, i in eachindex(data)]
+    noised =
+        [sign.(rand(R, Nσ) .- p_flip) .* data[i] for j = 1:Nnoise, i in eachindex(data)]
     J = CNCE(lϕ, gϕ, data, noised)
     x = sign.(randn(R, Nμ, Nσ)) .* 0.01
     results = nesterov(J, x, 0.9, 0.1)
@@ -94,26 +95,27 @@ struct DeepBM{Nl,T}
     partitions::NTuple{Nl,T}
 end
 
-function (dbm::DeepBM{Nl,T})(σ,ξ) where {Nl,T}
+function (dbm::DeepBM{Nl,T})(σ, ξ) where {Nl,T}
     sc = map(p -> view(ξ, :, p) * view(σ, p), dbm.partitions)
     ll = map(length, dbm.partitions)
-    length(σ)*sum(x->dot(x,x), (sc[i] + sc[i+1]) / (ll[i] + ll[i+1]) for i in 1:(Nl-1))
+    length(σ) * sum(x -> dot(x, x), (sc[i] + sc[i+1]) / (ll[i] + ll[i+1]) for i = 1:(Nl-1))
 end
 
 @testset "DBM general training" begin
     R = MersenneTwister(125)
-    
+
     Nσ = 20
     Nμ = 4
     Ndata = 2
     Nnoise = 20
     p_flip = 1 / 3
 
-    lϕ=DeepBM((1:7,8:15,16:20))
+    lϕ = DeepBM((1:7, 8:15, 16:20))
     gϕ(σ, ξ) = ReverseDiff.gradient(x -> lϕ(σ, x), ξ)
 
     data = [sign.(randn(R, Nσ)) for i = 1:Ndata]
-    noised = [sign.(rand(R, Nσ) .- p_flip) .* data[i] for j = 1:Nnoise, i in eachindex(data)]
+    noised =
+        [sign.(rand(R, Nσ) .- p_flip) .* data[i] for j = 1:Nnoise, i in eachindex(data)]
     J = CNCE(lϕ, gϕ, data, noised)
     x = sign.(randn(R, Nμ, Nσ)) .* 0.01
     results = nesterov(J, x, 0.9, 0.5)
