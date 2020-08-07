@@ -84,7 +84,7 @@ end
     noised = [sign.(rand(R, Nσ) .- p_flip) .* data[i] for j = 1:Nnoise, i in eachindex(data)]
     J = CNCE(lϕ, gϕ, data, noised)
     x = sign.(randn(R, Nμ, Nσ)) .* 0.01
-    results = nesterov(J, x, 0.9, 0.1)
+    results = nesterov(J, x, 0.9, 0.5)
     dx = sign.(results.sol)
     M = [maximum(abs.(dx * data[i] / length(data[i]))) for i = 1:length(data)]
     @test sum(M) == 2
