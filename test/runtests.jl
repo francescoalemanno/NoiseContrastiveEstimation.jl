@@ -130,13 +130,15 @@ Base.@kwdef struct SimParameters
     Nnoise::Int
     p_flip::Float64
 end
-params=SimParameters(    Nσ = 20,
-    Nμ = 4,
-    Ndata = 2,
-    Nnoise = 20,
-    p_flip = 1 / 3)
 
-function sim(params, reps)
+function partition(L,::Val{N}) where N
+    fr=trunc.(Int,LinRange(1,L,N+1))
+    R=[ifelse(i==1,1,fr[i]+1):fr[i+1] for i in 1:N]
+    ntuple(i->R[i],N)
+end
+
+
+function sim(params, ::Val{Nl}, reps) where Nl
     Rs = [MersenneTwister(125+3i) for i in 1:Threads.nthreads()]
     
     Nσ = params.Nσ
@@ -145,24 +147,37 @@ function sim(params, reps)
     Nnoise = params.Nnoise
     p_flip = params.p_flip
 
-    lϕ=DeepBM((1:7,8:15,16:20))
+    lϕ=DeepBM(partition(Nσ,Val(Nl)))
     gϕ(σ, ξ) = ReverseDiff.gradient(x -> lϕ(σ, x), ξ)
-    tasks = @sync [Threads.@spawn begin 
+    tasks = @sync [Threads.@spawn begin
         R=Rs[Threads.threadid()]
         data = [sign.(randn(R, Nσ)) for i = 1:Ndata]
+        tdata = [data[i].*sign.(((1-Nσ÷2):(Nσ-Nσ÷2)) .+ 0.01) for i = 1:Ndata]
         noised = [sign.(rand(R, Nσ) .- p_flip) .* data[i] for j = 1:Nnoise, i in eachindex(data)]
         J = CNCE(lϕ, gϕ, data, noised)
         x = sign.(randn(R, Nμ, Nσ)) .* 0.01
-        results = nesterov(J, x, 0.95, 1.0,maxiter=50)
-
+        results = nesterov(J, x, 0.95, 0.5, maxiter=1000)
         dx = sign.(results.sol)
         M = [maximum(abs.(dx * data[i] / length(data[i]))) for i = 1:length(data)]
-    end for rep = 1:reps]
-
-    fetch.(tasks)
+        Mt = [maximum(abs.(dx * tdata[i] / length(tdata[i]))) for i = 1:length(tdata)]
+        Mr = mean([maximum(abs.(dx * sign.(randn(R, Nσ)) / Nσ)) for i = 1:100])
+        [M;Mt;Mr]
+    end 
+    for rep = 1:reps]
+    
+    filter(x->isfinite(sum(x)),fetch.(tasks))
 end
+params=SimParameters(    
+    Nσ = 50,
+    Nμ = 20,
+    Ndata = 2,
+    Nnoise = 20,
+    p_flip = 1 / 3)
 
-sims=sim(params,10)
 
-folded=foldl((x,y)->max.(x,y),sims)
-@test folded==[1,1]
+simsD=sim(params,Val(5),50)
+simsS=sim(params,Val(2),50)
+using Statistics
+
+mean(simsD),mean(simsS)
+
