@@ -1,8 +1,8 @@
 module NoiseContrastiveEstimation
-
+using ReverseDiff
 Base.@kwdef struct CNCE{T,F,dF}
     f::F
-    grad_f::dF = (x, y) -> 0
+    grad_f::dF = (d, p) -> ReverseDiff.gradient(x -> f(d, x), p)
     data::Vector{T}
     noised::Matrix{T}
 end
