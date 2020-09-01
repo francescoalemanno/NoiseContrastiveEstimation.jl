@@ -11,7 +11,7 @@ using Statistics
     noised = foldl(hcat, x .+ randn(R, 20) .* 0.4 for x in data)
     J = CNCE(f = lϕ, grad_f = gϕ, data = data, noised = noised)
     @test J((15, -10)).J < J((7.5, -5)).J < J((0, 0)).J
-    results = nesterov(J, zeros(2), 0.9, 7.0)
+    results = nesterov(J, zeros(2), 0.9, 20.0)
     x = results.sol
     @test J(x).J < J((15, -10)).J
     Jautodiff = CNCE(;f = lϕ, data, noised)
@@ -25,9 +25,15 @@ end
     lϕ(x, θ) = θ'gϕ(x, θ)
 
     data = [[x+1,y+1] for (x,y) in zip(randn(R,200),randn(R,200))]
-    noised = [x+0.3*randn(2) for j=1:50, x in data]
+    noised = [x+0.3*randn(R,2) for j=1:50, x in data]
     J = CNCE(f = lϕ, grad_f = gϕ, data = data, noised = noised)
     results = nesterov(J, zeros(5), 0.9, 2.5)
+    @test results.sol[1]<0
+    @test results.sol[2]<0
+    @test results.sol[4]>0
+    @test results.sol[5]>0
+    J = StochasticCNCE(f = lϕ, grad_f = gϕ, data = data, perturbator = x -> x + 0.3 * randn(R,2), minibatch = 20, K=5, rng = R)
+    results = nesterov(J, zeros(5), 0.9, 20.0, maxiter=5000)
     @test results.sol[1]<0
     @test results.sol[2]<0
     @test results.sol[4]>0
