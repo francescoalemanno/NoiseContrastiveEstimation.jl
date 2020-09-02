@@ -14,30 +14,38 @@ using Statistics
     results = nesterov(J, zeros(2), 0.9, 20.0)
     x = results.sol
     @test J(x).J < J((15, -10)).J
-    Jautodiff = CNCE(;f = lϕ, data, noised)
+    Jautodiff = CNCE(; f = lϕ, data, noised)
     @test J(x).J == Jautodiff(x).J
     @test J(x).dJ == Jautodiff(x).dJ
 end
 
 @testset "Estimate Covariate Model" begin
     R = MersenneTwister(125)
-    gϕ(x, θ) = [x[1]*x[1], x[2]*x[2], x[1]*x[2], x[1], x[2]]
+    gϕ(x, θ) = [x[1] * x[1], x[2] * x[2], x[1] * x[2], x[1], x[2]]
     lϕ(x, θ) = θ'gϕ(x, θ)
 
-    data = [[x+1,y+1] for (x,y) in zip(randn(R,200),randn(R,200))]
-    noised = [x+0.3*randn(R,2) for j=1:50, x in data]
+    data = [[x + 1, y + 1] for (x, y) in zip(randn(R, 200), randn(R, 200))]
+    noised = [x + 0.3 * randn(R, 2) for j = 1:50, x in data]
     J = CNCE(f = lϕ, grad_f = gϕ, data = data, noised = noised)
     results = nesterov(J, zeros(5), 0.9, 2.5)
-    @test results.sol[1]<0
-    @test results.sol[2]<0
-    @test results.sol[4]>0
-    @test results.sol[5]>0
-    J = StochasticCNCE(f = lϕ, grad_f = gϕ, data = data, perturbator = x -> x + 0.3 * randn(R,2), minibatch = 20, K=5, rng = R)
-    results = nesterov(J, zeros(5), 0.9, 20.0, maxiter=5000)
-    @test results.sol[1]<0
-    @test results.sol[2]<0
-    @test results.sol[4]>0
-    @test results.sol[5]>0
+    @test results.sol[1] < 0
+    @test results.sol[2] < 0
+    @test results.sol[4] > 0
+    @test results.sol[5] > 0
+    J = StochasticCNCE(
+        f = lϕ,
+        grad_f = gϕ,
+        data = data,
+        perturbator = x -> x + 0.3 * randn(R, 2),
+        minibatch = 20,
+        K = 5,
+        rng = R,
+    )
+    results = nesterov(J, zeros(5), 0.9, 20.0, maxiter = 5000)
+    @test results.sol[1] < 0
+    @test results.sol[2] < 0
+    @test results.sol[4] > 0
+    @test results.sol[5] > 0
 end
 
 @testset "RBM training" begin
@@ -69,7 +77,7 @@ end
 
 @testset "DBM training" begin
     R = MersenneTwister(125)
-    
+
     function lϕ(σ, ξ)
         L = length(σ)
         t = L ÷ 3
@@ -86,8 +94,9 @@ end
     p_flip = 1 / 3
 
     data = [sign.(randn(R, Nσ)) for i = 1:Ndata]
-    noised = [sign.(rand(R, Nσ) .- p_flip) .* data[i] for j = 1:Nnoise, i in eachindex(data)]
-    J = CNCE(;f=lϕ, data, noised)
+    noised =
+        [sign.(rand(R, Nσ) .- p_flip) .* data[i] for j = 1:Nnoise, i in eachindex(data)]
+    J = CNCE(; f = lϕ, data, noised)
     x = sign.(randn(R, Nμ, Nσ)) .* 0.01
     results = nesterov(J, x, 0.9, 0.5)
     dx = sign.(results.sol)
